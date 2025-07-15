@@ -8,6 +8,7 @@
 ###########################################################################
 """Plugin for direct execution."""
 
+import sys
 from typing import Union
 
 import aiida.schedulers
@@ -364,14 +365,21 @@ class DirectScheduler(BashCliScheduler):
 
         :return: A string containing the kill command.
         """
-        from psutil import Process
-
-        # get a list of the process id of all descendants
-        process = Process(int(jobid))
-        children = process.children(recursive=True)
-        jobids = [str(jobid)]
-        jobids.extend([str(child.pid) for child in children])
-        jobids_str = ' '.join(jobids)
+        if sys.platform == 'win32':
+            import subprocess
+            # Get process list from pgrep, since psutil can't give processes inside bash environment on windows
+            children = subprocess.run(['pgrep', '-P', jobid], capture_output=True, text=True).stdout.split()
+            jobids = [str(jobid)]
+            jobids.extend([str(child) for child in children])
+            jobids_str = ' '.join(jobids)
+        else:
+            from psutil import Process
+            # get a list of the process id of all descendants
+            process = Process(int(jobid))
+            children = process.children(recursive=True)
+            jobids = [str(jobid)]
+            jobids.extend([str(child.pid) for child in children])
+            jobids_str = ' '.join(jobids)
 
         kill_command = f'kill {jobids_str}'
 

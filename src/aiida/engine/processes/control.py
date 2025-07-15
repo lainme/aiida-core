@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 import collections
 import concurrent
 import functools
@@ -280,8 +281,12 @@ def _resolve_futures(
             process = futures[future]
 
             try:
-                # unwrap is need here since LoopCommunicator will also wrap a future
-                unwrapped = unwrap_kiwi_future(future)
+                if sys.platform == 'win32':
+                    # There is a future always in pending state, I don't know why, just disable unwrapping at the moment
+                    unwrapped = future
+                else:
+                    # unwrap is need here since LoopCommunicator will also wrap a future
+                    unwrapped = unwrap_kiwi_future(future)
                 result = unwrapped.result()
             except communications.TimeoutError:
                 LOGGER.error(f'call to {infinitive} Process<{process.pk}> timed out')
