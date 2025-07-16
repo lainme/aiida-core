@@ -61,10 +61,17 @@ def start_daemon_worker(foreground: bool = False) -> None:
         LOGGER.info('Setting maximum recursion limit of daemon worker to %s', rlimit)
         sys.setrecursionlimit(rlimit)
 
-    signals = (signal.SIGTERM, signal.SIGINT)
-    for s in signals:
-        # https://github.com/python/mypy/issues/12557
-        runner.loop.add_signal_handler(s, lambda s=s: asyncio.create_task(shutdown_worker(runner)))  # type: ignore[misc]
+    if sys.platform == 'win32':
+        import win32api
+        def handle_win32_signal(sig):
+            if sig in (win32api.CTRL_C_EVENT, win32api.CTRL_BREAK_EVENT):
+                asyncio.create_task(shutdown_worker(runner))
+        win32api.SetConsoleCtrlHandler(handle_win32_signal, True)
+    else:
+        signals = (signal.SIGTERM, signal.SIGINT)
+        for s in signals:
+            # https://github.com/python/mypy/issues/12557
+            runner.loop.add_signal_handler(s, lambda s=s: asyncio.create_task(shutdown_worker(runner)))  # type: ignore[misc]
 
     try:
         LOGGER.info('Starting a daemon worker')
