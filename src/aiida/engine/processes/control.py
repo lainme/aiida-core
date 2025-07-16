@@ -274,6 +274,16 @@ def _resolve_futures(
             unwrapped_futures.keys(), timeout=None if timeout == float('inf') else timeout
         ):
             process = unwrapped_futures[future]
+
+            # For Windows, future.set_exception() gives InvalidStateError here
+            # and printed out in future.result(), however the process is already
+            # succesfully killed.
+            if sys.platform == 'win32':
+                if future.done():
+                    if isinstance(future.exception(), kiwipy.exceptions.RemoteException):
+                        LOGGER.report(f'Request to {infinitive} Process<{process.pk}> processed.')
+                        continue
+
             try:
                 result = future.result()
             except Exception as exception:
