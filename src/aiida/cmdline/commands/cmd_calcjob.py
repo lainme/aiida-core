@@ -138,13 +138,17 @@ def calcjob_remotecat(calcjob, path):
 
     remote_folder, path = get_remote_and_path(calcjob, path)
 
-    with tempfile.NamedTemporaryFile() as tmp_path:
-        try:
-            remote_folder.getfile(path, tmp_path.name)
-            with open(tmp_path.name, 'rb') as handle:
-                shutil.copyfileobj(handle, sys.stdout.buffer)
-        except OSError as exception:
-            echo.echo_critical(str(exception))
+    tmp_path = tempfile.NamedTemporaryFile(delete=False)
+    try:
+        remote_folder.getfile(path, tmp_path.name)
+        with open(tmp_path.name, 'rb') as handle:
+            shutil.copyfileobj(handle, sys.stdout.buffer)
+    except OSError as exception:
+        echo.echo_critical(str(exception))
+    try:
+        os.remove(tmp_path.name)
+    except:
+        pass
 
 
 @verdi_calcjob.command('outputcat')
