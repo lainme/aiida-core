@@ -143,12 +143,10 @@ def calcjob_remotecat(calcjob, path):
         remote_folder.getfile(path, tmp_path.name)
         with open(tmp_path.name, 'rb') as handle:
             shutil.copyfileobj(handle, sys.stdout.buffer)
+        tmp_path.close()
+        os.unlink(tmp_path.name)
     except OSError as exception:
         echo.echo_critical(str(exception))
-    try:
-        os.remove(tmp_path.name)
-    except:
-        pass
 
 
 @verdi_calcjob.command('outputcat')
