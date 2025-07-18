@@ -59,7 +59,10 @@ def get_env_with_venv_bin():
     config = get_config()
 
     currenv = os.environ.copy()
-    currenv['PATH'] = f"{os.path.dirname(sys.executable)}:{currenv['PATH']}"
+    if sys.platform == 'win32':
+        currenv['PATH'] = f"{os.path.dirname(sys.executable)};{currenv['PATH']}"
+    else:
+        currenv['PATH'] = f"{os.path.dirname(sys.executable)}:{currenv['PATH']}"
     currenv['AIIDA_PATH'] = config.dirpath
     currenv['PYTHONUNBUFFERED'] = 'True'
 
