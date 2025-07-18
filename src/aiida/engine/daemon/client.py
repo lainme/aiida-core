@@ -219,9 +219,13 @@ class DaemonClient:
         the subprocess. The ``AIIDA_PATH`` variable ensures that the subprocess will use the same AiiDA configuration
         directory as used by the current process.
         """
+        seperator = ':'
+        if sys.platform == 'win32':
+            seperator = ';'
+
         env = os.environ.copy()
-        env['PATH'] = ':'.join([os.path.dirname(sys.executable), env['PATH']])
-        env['PYTHONPATH'] = ':'.join(sys.path)
+        env['PATH'] = seperator.join([os.path.dirname(sys.executable), env['PATH']])
+        env['PYTHONPATH'] = seperator.join(sys.path)
         env['AIIDA_PATH'] = get_config().dirpath
         env['PYTHONUNBUFFERED'] = 'True'
         return env
